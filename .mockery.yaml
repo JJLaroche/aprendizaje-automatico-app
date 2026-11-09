@@ -1,0 +1,13 @@
+with-expecter: true
+filename: "{{.InterfaceNameSnake}}.go"
+dir: "{{.InterfaceDir}}/mocks"
+mockname: "Mock{{.InterfaceName}}"
+outpkg: "mocks"
+packages:
+  github.com/marielarodriguez/aprendizaje-automatico-app/internal/item/domain:
+    interfaces:
+      ItemRepository:
+      ItemService:
+  github.com/marielarodriguez/aprendizaje-automatico-app/pkg/clock:
+    interfaces:
+      Clock:

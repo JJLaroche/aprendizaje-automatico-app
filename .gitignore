@@ -1,0 +1,37 @@
+# Binarios y compilados
+bin/
+dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Archivos de base de datos SQLite y temporales (WAL / SHM)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Variables de entorno y secretos locales (NUNCA subir a Git)
+.env
+.env.local
+.env.*.local
+
+# Archivos de cobertura de tests
+*.out
+*.test
+coverage.html
+
+# IDEs y editores
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
