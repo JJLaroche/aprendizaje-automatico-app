@@ -31,7 +31,7 @@ if not diff_text.strip():
 
 # 3. RAG Retrieval: Buscar las reglas aplicables en ChromaDB
 embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/text-embedding-004", 
+    model="models/gemini-embedding-001", 
     google_api_key=gemini_api_key
 )
 

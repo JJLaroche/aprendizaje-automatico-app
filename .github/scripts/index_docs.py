@@ -1,6 +1,5 @@
 import glob
 import os
-from langchain_community.document_loaders import UnstructuredMarkdownLoader
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 from langchain_chroma import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -32,7 +31,7 @@ if not documents:
 
 # 2. Generar embeddings e indexar en ChromaDB local
 embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/text-embedding-004",
+    model="models/gemini-embedding-001",
     google_api_key=gemini_api_key
 )
 
