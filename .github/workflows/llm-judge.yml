@@ -1,11 +1,35 @@
-name: LLM Code Reviewer
+name: CI & LLM Code Reviewer
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened]
 
 jobs:
+  test:
+    name: Run Unit & Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Descargar dependencias
+        run: go mod download
+
+      - name: Verificar compilación
+        run: go build -v ./...
+
+      - name: Ejecutar Tests Unitarios
+        run: go test -v -race -coverprofile=coverage.out ./...
+
   review:
+    name: LLM-as-a-Judge Code Review
+    needs: test # Obligatorio: Solo se ejecuta si el job de tests pasa exitosamente
     runs-on: ubuntu-latest
     permissions:
       contents: read
