@@ -22,11 +22,16 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Instalar dependencias
+      - name: Instalar dependencias RAG
         run: |
-          pip install google-genai PyGithub
+          pip install google-genai PyGithub chroma-db langchain-community langchain-text-splitters langchain-google-genai
 
-      - name: Ejecutar LLM Judge
+      - name: Indexar Documentación RAG
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python .github/scripts/index_docs.py
+
+      - name: Ejecutar RAG LLM Judge
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
