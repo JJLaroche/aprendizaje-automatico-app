@@ -24,7 +24,7 @@ jobs:
 
       - name: Instalar dependencias RAG
         run: |
-          pip install google-genai PyGithub chroma-db langchain-community langchain-text-splitters langchain-google-genai
+          pip install google-genai PyGithub chromadb langchain-chroma langchain-community langchain-text-splitters langchain-google-genai
 
       - name: Indexar Documentación RAG
         env:
