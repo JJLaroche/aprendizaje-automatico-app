@@ -116,6 +116,36 @@ func (_c *MockItemRepository_GetByID_Call) Return(_a0 *domain.Item, _a1 error) *
 	return _c
 }
 
+// FindByNameUnsafe provides a mock function with given fields: name
+func (_m *MockItemRepository) FindByNameUnsafe(name string) ([]domain.Item, error) {
+	ret := _m.Called(name)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FindByNameUnsafe")
+	}
+
+	var r0 []domain.Item
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) ([]domain.Item, error)); ok {
+		return rf(name)
+	}
+	if rf, ok := ret.Get(0).(func(string) []domain.Item); ok {
+		r0 = rf(name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.Item)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(name)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetByName provides a mock function with given fields: ctx, name
 func (_m *MockItemRepository) GetByName(ctx context.Context, name string) (*domain.Item, error) {
 	ret := _m.Called(ctx, name)

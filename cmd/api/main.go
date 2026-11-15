@@ -86,6 +86,7 @@ func main() {
 	r.Route("/api/v1/items", func(r chi.Router) {
 		r.Post("/", itemReg.Handler.Create)
 		r.Get("/", itemReg.Handler.List)
+		r.Get("/search", itemReg.Handler.SearchByNameUnsafe)
 		r.Get("/{id}", itemReg.Handler.GetByID)
 		r.Patch("/{id}/status", itemReg.Handler.UpdateStatus)
 		r.Delete("/{id}", itemReg.Handler.Delete)

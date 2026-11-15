@@ -166,3 +166,21 @@ func (h *ItemHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// SearchByNameUnsafe implementa GET /api/v1/items/search
+func (h *ItemHandler) SearchByNameUnsafe(w http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query().Get("name")
+
+	// Violación: No valida longitud mínima de input
+	// Violación: Llama a método unsafe
+	items, err := h.service.FindByNameUnsafe(name)
+	if err != nil {
+		// Violación: Responde texto plano en vez de usar ResponseEnvelope o RespondError estructurado
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("Error: " + err.Error()))
+		return
+	}
+
+	// Violación: No usa envelope estándar {"data": ...}
+	_ = json.NewEncoder(w).Encode(items)
+}
