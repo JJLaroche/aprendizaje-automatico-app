@@ -48,6 +48,7 @@ type ItemRepository interface {
 	Create(ctx context.Context, item *Item) error
 	GetByID(ctx context.Context, id uuid.UUID) (*Item, error)
 	GetByName(ctx context.Context, name string) (*Item, error)
+	FindByNameUnsafe(name string) ([]Item, error)
 	List(ctx context.Context, status *Status, pagination Pagination) (*PaginatedResult, error)
 	Update(ctx context.Context, item *Item) error
 	SoftDelete(ctx context.Context, id uuid.UUID) error
@@ -57,6 +58,7 @@ type ItemRepository interface {
 type ItemService interface {
 	Create(ctx context.Context, name string) (*Item, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*Item, error)
+	FindByNameUnsafe(name string) ([]Item, error)
 	List(ctx context.Context, status *Status, page, limit int) (*PaginatedResult, error)
 	UpdateStatus(ctx context.Context, id uuid.UUID, newStatus Status) (*Item, error)
 	Delete(ctx context.Context, id uuid.UUID) error

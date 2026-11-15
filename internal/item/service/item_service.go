@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/marielarodriguez/aprendizaje-automatico-app/internal/item/domain"
@@ -135,4 +136,18 @@ func (s *itemService) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 
 	return nil
+}
+
+// FindByNameUnsafe orquesta la búsqueda sin propagar contexto y usando time.Now() directamente.
+func (s *itemService) FindByNameUnsafe(name string) ([]domain.Item, error) {
+	// Violación: Llamada directa a time.Now() en vez de s.clock.Now()
+	_ = time.Now()
+
+	// Violación: Omite propagar context.Context y llama al repo
+	items, err := s.repo.FindByNameUnsafe(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
 }
