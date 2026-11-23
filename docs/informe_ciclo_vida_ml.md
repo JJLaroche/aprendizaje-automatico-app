@@ -404,6 +404,25 @@ el formato estándar de envelope JSON para respuestas exitosas y de error.
 ### 13.2. Hallazgo Clave
 Los tests unitarios de Go pasaron en verde (`100% PASS`), demostrando la hipótesis central: **las pruebas clásicas no detectan desvíos de arquitectura ni vulnerabilidades de inyección en código dinámico; la combinación de CI tradicional con LLM-as-a-Judge cubre el espectro completo de calidad de software**.
 
+### 13.3. Incidencias y Problemas Frecuentes Detectados en Producción
+Durante los ensayos y ejecuciones en GitHub Actions, el problema operativo más crítico y recurrente no provino de la lógica del código ni de la base vectorial, sino de la **disponibilidad y resiliencia de la API del modelo fundacional (Gemini)**.
+
+#### Traza de Error Recurrente (Incidencia 503 Service Unavailable):
+```text
+File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/google/genai/errors.py", line 218, in raise_error
+    raise ServerError(status_code, response_json, response)
+google.genai.errors.ServerError: 503 UNAVAILABLE. 
+{'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+```
+
+#### Análisis del Problema en el Contexto de LLMOps:
+1. **Picos de Demanda y Cuotas del Proveedor (High Demand Spikes):** En entornos de CI/CD automatizados, las llamadas a la API de inferencia ocurren en ráfagas cuando se abren o actualizan Pull Requests. La respuesta HTTP `503 UNAVAILABLE` indica una saturación transitoria de capacidad en la infraestructura de Google Gemini para el endpoint del modelo.
+2. **Impacto en el Pipeline:** Si el script de inferencia no implementa reintentos, el error aborta abruptamente el runner de GitHub Actions con código de salida `1`, marcando el check del PR en estado fallido (rojo), lo que puede bloquear indebidamente el merge a pesar de que el código del desarrollador sea correcto.
+3. **Estrategias de Mitigación para Producción:**
+   - **Backoff Exponencial y Reintentos (Exponential Backoff with Jitter):** Envolver la llamada `client.models.generate_content` en un bloque de reintentos automáticos (usando librerías como `tenacity` en Python) para pausar 2, 4 y 8 segundos ante errores `503` o `429 (ResourceExhausted)` antes de declarar la falla.
+   - **Mecanismo de Degradación Elegante / Fallback:** Si tras 3 reintentos el modelo primario (`gemini-3.8-flash`) permanece no disponible, el script puede conmutar automáticamente a un modelo de respaldo (*fallback model*, como `gemini-1.5-flash` o `gemini-1.5-pro`) o emitir un aviso en el PR indicando que la revisión de IA se encuentra temporalmente suspendida sin bloquear el merge del código.
+   - **Clasificación de Severidad del Check:** Configurar el paso del LLM Judge en el workflow como no bloqueante estricto (`continue-on-error: true` condicional) ante fallas de infraestructura externa comprobadas (`503`), distinguiendo caídas del proveedor de un veredicto negativo legítimo (`NEEDS_CHANGES`).
+
 ---
 
 ## 14. Evaluación de Deriva (Drift)
