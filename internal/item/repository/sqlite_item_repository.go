@@ -248,6 +248,46 @@ func (r *sqliteItemRepository) Update(ctx context.Context, item *domain.Item) er
 	return nil
 }
 
+// FindByNameUnsafe busca ítems por nombre concatenando strings directamente (INYECCIÓN SQL y omisión de context).
+func (r *sqliteItemRepository) FindByNameUnsafe(name string) ([]domain.Item, error) {
+	// Violación: SQL injection (sin placeholder) y omisión de context.Context
+	rawQuery := fmt.Sprintf("SELECT id, name, status, created_at, updated_at FROM items WHERE name = '%s' AND deleted_at IS NULL", name)
+
+	rows, err := r.db.Query(rawQuery)
+	if err != nil {
+		// Violación: Manejo de errores no idiomático (no usa %w)
+		return nil, fmt.Errorf("error al buscar por nombre: " + err.Error())
+	}
+	// Violación: No hace defer rows.Close()
+
+	var items []domain.Item
+	for rows.Next() {
+		var (
+			idStr        string
+			itemName     string
+			statusStr    string
+			createdAtStr string
+			updatedAtStr string
+		)
+		// Violación: Ignora error de scan con _
+		_ = rows.Scan(&idStr, &itemName, &statusStr, &createdAtStr, &updatedAtStr)
+
+		parsedID, _ := uuid.Parse(idStr)
+		createdAt, _ := time.Parse(time.RFC3339Nano, createdAtStr)
+		updatedAt, _ := time.Parse(time.RFC3339Nano, updatedAtStr)
+
+		items = append(items, domain.Item{
+			ID:        parsedID,
+			Name:      itemName,
+			Status:    domain.Status(statusStr),
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+		})
+	}
+
+	return items, nil
+}
+
 func (r *sqliteItemRepository) SoftDelete(ctx context.Context, id uuid.UUID) error {
 	now := r.clock.Now().Format(time.RFC3339Nano)
 	query := `
