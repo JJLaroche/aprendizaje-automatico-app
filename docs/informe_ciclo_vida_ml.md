@@ -417,10 +417,13 @@ google.genai.errors.ServerError: 503 UNAVAILABLE.
 
 #### Análisis del Problema en el Contexto de LLMOps:
 1. **Picos de Demanda y Cuotas del Proveedor (High Demand Spikes):** En entornos de CI/CD automatizados, las llamadas a la API de inferencia ocurren en ráfagas cuando se abren o actualizan Pull Requests. La respuesta HTTP `503 UNAVAILABLE` indica una saturación transitoria de capacidad en la infraestructura de Google Gemini para el endpoint del modelo.
-2. **Impacto en el Pipeline:** Si el script de inferencia no implementa reintentos, el error aborta abruptamente el runner de GitHub Actions con código de salida `1`, marcando el check del PR en estado fallido (rojo), lo que puede bloquear indebidamente el merge a pesar de que el código del desarrollador sea correcto.
-3. **Estrategias de Mitigación para Producción:**
-   - **Backoff Exponencial y Reintentos (Exponential Backoff with Jitter):** Envolver la llamada `client.models.generate_content` en un bloque de reintentos automáticos (usando librerías como `tenacity` en Python) para pausar 2, 4 y 8 segundos ante errores `503` o `429 (ResourceExhausted)` antes de declarar la falla.
-   - **Mecanismo de Degradación Elegante / Fallback:** Si tras 3 reintentos el modelo primario (`gemini-3.8-flash`) permanece no disponible, el script puede conmutar automáticamente a un modelo de respaldo (*fallback model*, como `gemini-1.5-flash` o `gemini-1.5-pro`) o emitir un aviso en el PR indicando que la revisión de IA se encuentra temporalmente suspendida sin bloquear el merge del código.
+2. **Impacto en el Pipeline:** Al no contar actualmente con un mecanismo automático de reintentos en el código, el error aborta abruptamente el runner de GitHub Actions con código de salida `1`, marcando el check del PR en estado fallido (rojo) y deteniendo el pipeline.
+3. **Manejo Operativo Actual (Reintento Manual):**
+   - **En el estado actual del proyecto, NO se aplicaron aún automatizaciones de mitigación programática** (como backoff exponencial o fallbacks automáticos en código).
+   - Ante la ocurrencia del error `503 UNAVAILABLE`, la resolución operativa adoptada es **exclusivamente el reintento manual**: el desarrollador o evaluador debe esperar unos minutos a que disminuya el pico de demanda del proveedor y presionar manualmente el botón **"Re-run failed jobs"** en la interfaz de GitHub Actions para reejecutar el pipeline.
+4. **Propuestas de Mejora a Futuro (Roadmap de Resiliencia):**
+   - **Backoff Exponencial Automático:** Envolver la llamada `client.models.generate_content` en un bloque de reintentos automáticos (ej. mediante la librería `tenacity` en Python) para pausar 2, 4 y 8 segundos ante errores `503` o `429 (ResourceExhausted)` antes de abortar.
+   - **Mecanismo de Degradación Elegante / Fallback:** Conmutar automáticamente a un modelo de respaldo (*fallback model*, como `gemini-1.5-flash` o `gemini-1.5-pro`) si el primario no responde tras $N$ intentos.
    - **Clasificación de Severidad del Check:** Configurar el paso del LLM Judge en el workflow como no bloqueante estricto (`continue-on-error: true` condicional) ante fallas de infraestructura externa comprobadas (`503`), distinguiendo caídas del proveedor de un veredicto negativo legítimo (`NEEDS_CHANGES`).
 
 ---
